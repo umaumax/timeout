@@ -1,0 +1,74 @@
+name:                      Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name:                  Release binary
+    strategy:
+      matrix:
+        include:
+          - os:            ubuntu-latest
+            target:        x86_64-unknown-linux-gnu
+            file_name:     timeout
+            artifact_name: timeout-x86_64-unknown-linux-gnu
+            cross:         false
+          - os:            ubuntu-latest
+            target:        aarch64-unknown-linux-gnu
+            file_name:     timeout
+            artifact_name: timeout-aarch64-unknown-linux-gnu
+            cross:         true
+          - os:            ubuntu-latest
+            target:        armv7-unknown-linux-gnueabihf
+            file_name:     timeout
+            artifact_name: timeout-armv7-unknown-linux-gnueabihf
+            cross:         true
+          - os:            windows-latest
+            target:        x86_64-pc-windows-msvc
+            file_name:     timeout.exe
+            artifact_name: timeout-x86_64-pc-windows-msvc.exe
+            cross:         false
+          - os:            windows-latest
+            target:        x86_64-pc-windows-gnu
+            file_name:     timeout.exe
+            artifact_name: timeout-x86_64-unknown-linux-gnu.exe
+            cross:         false
+          - os:            macos-latest
+            target:        x86_64-apple-darwin
+            file_name:     timeout.dylib
+            artifact_name: timeout-x86_64-apple-darwin.dylib
+            cross:         false
+          # - os:          macos-latest
+            # target:      aarch64-apple-darwin
+            # file_name:   timeout.dylib
+            # artifact_name: timeout-aarch64-apple-darwin.dylib
+            # cross:       true
+
+    runs-on:               ${{ matrix.os }}
+
+    steps:
+      - uses:              actions/checkout@v2
+      - uses:              actions-rs/toolchain@v1
+        with:
+          toolchain:       stable
+          target:          ${{ matrix.target }}
+          override:        true
+
+      - name:              Build
+        uses:              actions-rs/cargo@v1
+        with:
+          use-cross:       ${{ matrix.cross }}
+          command:         build
+          args:            --release --target ${{ matrix.target }} --verbose
+
+      - name:              Upload binaries to release
+        uses:              svenstaro/upload-release-action@2.1.1
+        with:
+          repo_token:      ${{ secrets.GITHUB_TOKEN }}
+          file:            target/${{ matrix.target }}/release/${{ matrix.file_name }}
+          asset_name:      ${{ matrix.artifact_name }}
+          tag:             ${{ github.ref }}
+          overwrite:       true
