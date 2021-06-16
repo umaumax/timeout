@@ -85,7 +85,10 @@ fn main() -> std::io::Result<()> {
         let text = matches.value_of("duration").unwrap();
         match text.parse::<f64>() {
             Ok(v) => Duration::from_secs_f64(v),
-            _ => text.parse::<humantime::Duration>().unwrap().into(),
+            _ => match text.parse::<humantime::Duration>() {
+                Ok(v) => v.into(),
+                _ => parse_duration::parse(text).unwrap(),
+            },
         }
     };
     let command_with_args: Vec<&str> = matches.values_of("command").unwrap().collect();
