@@ -26,16 +26,17 @@ jobs:
             file_name:     timeout
             artifact_name: timeout-armv7-unknown-linux-gnueabihf
             cross:         true
-          - os:            windows-latest
-            target:        x86_64-pc-windows-msvc
-            file_name:     timeout.exe
-            artifact_name: timeout-x86_64-pc-windows-msvc.exe
-            cross:         false
-          - os:            windows-latest
-            target:        x86_64-pc-windows-gnu
-            file_name:     timeout.exe
-            artifact_name: timeout-x86_64-unknown-linux-gnu.exe
-            cross:         false
+          # This repository is not for Windows.
+          # - os:          windows-latest
+            # target:      x86_64-pc-windows-msvc
+            # file_name:   timeout.exe
+            # artifact_name: timeout-x86_64-pc-windows-msvc.exe
+            # cross:       false
+          # - os:          windows-latest
+            # target:      x86_64-pc-windows-gnu
+            # file_name:   timeout.exe
+            # artifact_name: timeout-x86_64-unknown-linux-gnu.exe
+            # cross:       false
           - os:            macos-latest
             target:        x86_64-apple-darwin
             file_name:     timeout.dylib
