@@ -39,13 +39,13 @@ jobs:
             # cross:       false
           - os:            macos-latest
             target:        x86_64-apple-darwin
-            file_name:     timeout.dylib
-            artifact_name: timeout-x86_64-apple-darwin.dylib
+            file_name:     timeout
+            artifact_name: timeout-x86_64-apple-darwin
             cross:         false
           # - os:          macos-latest
             # target:      aarch64-apple-darwin
-            # file_name:   timeout.dylib
-            # artifact_name: timeout-aarch64-apple-darwin.dylib
+            # file_name:   timeout
+            # artifact_name: timeout-aarch64-apple-darwin
             # cross:       true
 
     runs-on:               ${{ matrix.os }}
