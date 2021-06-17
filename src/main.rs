@@ -100,12 +100,12 @@ fn main() -> std::io::Result<()> {
     match child.wait_or_timeout(duration).unwrap() {
         Some(status) => {
             if let Some(code) = status.code() {
-                println!("code={}", code);
+                std::process::exit(code);
             } else {
                 if cfg!(feature = "unix") {
-                    println!("signal={}", status.signal().unwrap());
+                    std::process::exit(status.signal().unwrap());
                 }
-                println!("signal");
+                std::process::exit(1);
             }
         }
         None => {
