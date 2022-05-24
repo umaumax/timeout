@@ -4,8 +4,8 @@ use std::process::{Child, Command};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use clap::AppSettings;
 use libc::pid_t;
+use structopt::StructOpt;
 
 #[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
@@ -49,51 +49,30 @@ impl ChildExt for Child {
     }
 }
 
-fn build_app() -> clap::App<'static, 'static> {
-    let program = std::env::args()
-        .nth(0)
-        .and_then(|s| {
-            std::path::PathBuf::from(s)
-                .file_stem()
-                .map(|s| s.to_string_lossy().into_owned())
-        })
-        .unwrap();
+#[derive(StructOpt)]
+struct Cli {
+    #[structopt(name = "duration", help = "unshare bandwidth limit flag")]
+    duration: String,
 
-    clap::App::new(program)
-        .about("simple timeoutcat command by rust")
-        .version("0.0.1")
-        .setting(clap::AppSettings::VersionlessSubcommands)
-        .arg(
-            clap::Arg::with_name("duration")
-                .help("duration")
-                .required(true)
-                .index(1),
-        )
-        .arg(
-            clap::Arg::with_name("command")
-                .help("command")
-                .required(true)
-                .multiple(true)
-                .index(2),
-        )
-        .setting(AppSettings::TrailingVarArg)
+    #[structopt(name = "commands")]
+    pub commands: Vec<String>,
 }
 
 fn main() -> std::io::Result<()> {
-    let matches = build_app().get_matches();
+    let args = Cli::from_args();
+
     let duration: Duration = {
-        let text = matches.value_of("duration").unwrap();
+        let text = args.duration;
         match text.parse::<f64>() {
             Ok(v) => Duration::from_secs_f64(v),
             _ => match text.parse::<humantime::Duration>() {
                 Ok(v) => v.into(),
-                _ => parse_duration::parse(text).unwrap(),
+                _ => parse_duration::parse(&text).unwrap(),
             },
         }
     };
-    let command_with_args: Vec<&str> = matches.values_of("command").unwrap().collect();
-    let command = &command_with_args[0];
-    let args = &command_with_args[1..];
+    let command = &args.commands[0];
+    let args = &args.commands[1..];
 
     let mut child = Command::new(command).args(args).spawn().unwrap();
 
