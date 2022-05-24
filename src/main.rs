@@ -1,10 +1,13 @@
+use std::convert::TryFrom;
 use std::io;
 use std::process::ExitStatus;
 use std::process::{Child, Command};
+use std::str::FromStr;
 use std::thread;
 use std::time::{Duration, Instant};
 
 use libc::pid_t;
+use nix::sys::signal::Signal;
 use structopt::StructOpt;
 
 #[cfg(unix)]
@@ -51,15 +54,35 @@ impl ChildExt for Child {
 
 #[derive(StructOpt)]
 struct Cli {
-    #[structopt(name = "duration", help = "unshare bandwidth limit flag")]
+    #[structopt(name = "duration", help = "e.g. 1s")]
     duration: String,
 
     #[structopt(name = "commands")]
     pub commands: Vec<String>,
+
+    #[structopt(
+        short = "s",
+        long = "signal",
+        default_value("SIGKILL"),
+        help = "specify the signal to be sent on timeout"
+    )]
+    signal: String,
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::from_args();
+
+    let signal = match &args.signal.parse::<i32>() {
+        Ok(n) => Signal::try_from(*n)?,
+        Err(_) => Signal::from_str(&args.signal.to_uppercase())?,
+    };
+    let signal_number: libc::c_int = match signal.into() {
+        Some(s) => s as libc::c_int,
+        None => 0,
+    };
+    if signal_number == 0 {
+        panic!("invalid signal number");
+    }
 
     let duration: Duration = {
         let text = args.duration;
@@ -88,7 +111,7 @@ fn main() -> std::io::Result<()> {
             }
         }
         None => {
-            child.send_signal(libc::SIGKILL)?;
+            child.send_signal(signal_number)?;
         }
     };
     Ok(())

@@ -8,5 +8,6 @@ edition = "2018"
 [dependencies]
 humantime = "2.1.0"
 libc = "0.2.97"
+nix = "0.24.1"
 parse_duration = "2.1.1"
 structopt = "0.3.26"
